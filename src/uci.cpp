@@ -54,8 +54,7 @@ namespace {
     
     void go(Position& pos, istringstream& is/*, StateListPtr& states*/)
     {
-        pos.update_square_attackers_count();
-        
+        pos.update();
         MoveList<LEGAL> move_list = MoveList<LEGAL>(pos);
         
         std::ostringstream moves;
