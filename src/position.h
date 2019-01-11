@@ -86,6 +86,7 @@ public:
     int rule50_count() const;
     
     unsigned char get_square_attackers_count(Color color, int file, int rank) const;
+    void update();
   
 private:
     // Initialization helpers (used while setting up a position)
