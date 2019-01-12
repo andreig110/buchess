@@ -43,7 +43,7 @@ namespace {
         pos.set(fen, &states->back());
         
         // Parse move list (if any)
-        while (is >> token && MOVEGEN::check_move(  &pos,  (m = UCI::to_move(pos, token))  )) {
+        while (is >> token && MOVEGEN::check_move(  pos,  (m = UCI::to_move(pos, token))  )) {
             states->emplace_back();
             pos.do_move(m, states->back());
         }
