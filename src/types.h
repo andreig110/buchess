@@ -1,9 +1,11 @@
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
+#include <algorithm>  // For std::find
 #include <cassert>
 #include <cstddef> // For size_t
 #include <cstdint> // For uint64_t
+#include <vector>
 
 typedef uint64_t Key;
 typedef uint64_t Bitboard;
@@ -106,6 +108,17 @@ struct SquareList {
     size_t size() const { return last - squareList; }
 private:
     Square squareList[SQUARE_NB], *last = &squareList[0];
+};
+
+struct VectorSquareList {
+    void addSquare(Square sq) { squareList.push_back(sq); };
+    void clear() { squareList.clear(); };
+    bool contains(Square sq) const
+    {
+        return std::find(squareList.begin(), squareList.end(), sq) != squareList.end();
+    }
+private:
+    std::vector<Square> squareList;
 };
 
 
