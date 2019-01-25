@@ -1,6 +1,7 @@
 #ifndef POSITION_H_INCLUDED
 #define POSITION_H_INCLUDED
 
+#include <algorithm>  // For std::find
 #include <cassert>
 #include <deque>
 #include <memory> // For std::unique_ptr
@@ -87,6 +88,8 @@ public:
     
     unsigned char get_square_attackers_count(Color color, int file, int rank) const;
     void update();
+    void add_attacked_king_square(int file, int rank);
+    bool is_king_square_attacked(int file, int rank);
   
 private:
     // Initialization helpers (used while setting up a position)
@@ -114,6 +117,7 @@ private:
     Color sideToMove;
     StateInfo* st;
     unsigned char squares_attackers_count [COLOR_NB][8][8] = { { { 0 } } };  // calculated after UCI "go" command
+    VectorSquareList attacked_king_squares;
 };
 
 
@@ -196,6 +200,16 @@ inline void Position::inc_square_attackers_count(Color color, int file, int rank
 inline unsigned char Position::get_square_attackers_count(Color color, int file, int rank) const
 {
     return squares_attackers_count[color][file][rank];
+}
+
+inline void Position::add_attacked_king_square(int file, int rank)
+{
+    attacked_king_squares.addSquare(Square(file, rank));
+}
+
+inline bool Position::is_king_square_attacked(int file, int rank)
+{
+    return attacked_king_squares.contains(Square(file, rank));
 }
 
 /*inline Bitboard Position::checkers() const {

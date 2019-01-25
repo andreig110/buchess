@@ -97,7 +97,7 @@ struct Move {
 };
 
 struct SquareList {
-    void addSquare(Square sq) { *last++ = sq; };
+    void addSquare(Square sq) { *last++ = sq; }
     void push(SquareList& other)
     {
         for (const auto& sq : other)
@@ -111,11 +111,15 @@ private:
 };
 
 struct VectorSquareList {
-    void addSquare(Square sq) { squareList.push_back(sq); };
-    void clear() { squareList.clear(); };
+    void addSquare(Square sq)
+    {
+        if (std::find(squareList.cbegin(), squareList.cend(), sq) == squareList.cend())  // Push only unique values
+            squareList.push_back(sq);
+    }
+    void clear() { squareList.clear(); }
     bool contains(Square sq) const
     {
-        return std::find(squareList.begin(), squareList.end(), sq) != squareList.end();
+        return std::find(squareList.cbegin(), squareList.cend(), sq) != squareList.cend();
     }
 private:
     std::vector<Square> squareList;
