@@ -219,6 +219,7 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
 void Position::update()
 {
     update_squares_attackers_count();
+    update_attacked_king_squares();
 }
 
 void Position::update_squares_attackers_count()
@@ -227,7 +228,7 @@ void Position::update_squares_attackers_count()
         for (int r = 0; r < 8; ++r) {
             const Piece pc = board[r][f];
             if (pc != NO_PIECE) {
-                const SquareList list = figure_attacks_from(*this, f, r, type_of(pc));
+                const SquareList list = figure_attacks_from(type_of(pc), *this, f, r);
                 for (const auto& sq : list)
                     ++squares_attackers_count[color_of(pc)][sq.file][sq.rank];
             }
@@ -247,4 +248,16 @@ void Position::print_squares_attackers_count()
             ss.str("");
         }
     }
+}
+
+void Position::update_attacked_king_squares()
+{
+    for (int f = 0; f < 8; ++f)
+        for (int r = 0; r < 8; ++r) {
+            const Piece pc = board[r][f];
+            const PieceType pt = type_of(pc);
+            if (pt == BISHOP || pt == ROOK || pt == QUEEN) {
+                figure_attacks_behind_king_from(pt, *this, f, r, &attacked_king_squares);
+            }
+        }
 }

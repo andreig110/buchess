@@ -13,6 +13,9 @@ SquareList queen_attacks_from(const Position& pos, int file, int rank);
 SquareList king_attacks_from(/*const Position& pos,*/ int file, int rank);
 
 //template <PieceType Pt>
-SquareList figure_attacks_from(const Position& pos, int file, int rank, const PieceType Pt);
+SquareList figure_attacks_from(const PieceType Pt, const Position& pos, int file, int rank);
+
+// Return attacked squares behind king (by bishop, rook or queen)
+VectorSquareList* figure_attacks_behind_king_from(const PieceType Pt, const Position& pos, int file, int rank, VectorSquareList* asbk);
 
 #endif // #ifndef BOARD_H_INCLUDED

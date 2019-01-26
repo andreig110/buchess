@@ -146,7 +146,7 @@ SquareList king_attacks_from(int file, int rank)
 
 
 //template <PieceType Pt>
-SquareList figure_attacks_from(const Position& pos, int file, int rank, const PieceType Pt)
+SquareList figure_attacks_from(const PieceType Pt, const Position& pos, int file, int rank)
 {
     switch (Pt) {
         case PAWN:
@@ -170,4 +170,60 @@ SquareList figure_attacks_from(const Position& pos, int file, int rank, const Pi
         default:
             break;
     }
+}
+
+
+namespace {
+    
+    void rook_attacks_behind_king_from(const Position& pos, int file, int rank, VectorSquareList* asbk)
+    {
+        const Piece ourKing = make_piece(pos.side_to_move(), KING);
+        
+        for (int to_rank = rank + 1; to_rank <= RANK_8; ++to_rank) {
+            const Piece pc = pos.piece_on(file, to_rank);
+            if (pc == ourKing  &&  ++to_rank <= RANK_8)  // it does not check if the square (behind king) is occupied
+                asbk->addSquare(Square(file, to_rank));
+            if (pc != NO_PIECE)
+                break;
+        }
+        for (int to_rank = rank - 1; to_rank >= RANK_1; --to_rank) {
+            const Piece pc = pos.piece_on(file, to_rank);
+            if (pc == ourKing  &&  --to_rank >= RANK_1)
+                asbk->addSquare(Square(file, to_rank));
+            if (pc != NO_PIECE)
+                break;
+        }
+        
+        for (int to_file = file + 1; to_file <= FILE_H; ++to_file) {
+            const Piece pc = pos.piece_on(to_file, rank);
+            if (pc == ourKing  &&  ++to_file <= FILE_H)
+                asbk->addSquare(Square(to_file, rank));
+            if (pc != NO_PIECE)
+                break;
+        }
+        for (int to_file = file - 1; to_file >= FILE_A; --to_file) {
+            const Piece pc = pos.piece_on(to_file, rank);
+            if (pc == ourKing  &&  --to_file <= FILE_A)
+                asbk->addSquare(Square(to_file, rank));
+            if (pc != NO_PIECE)
+                break;
+        }
+    }
+    
+}  // namespace
+
+
+VectorSquareList* figure_attacks_behind_king_from(const PieceType Pt, const Position& pos, int file, int rank, VectorSquareList* asbk)
+{
+    switch (Pt) {
+    case BISHOP:
+        break;
+    case ROOK:
+        rook_attacks_behind_king_from(pos, file, rank, asbk);
+        break;
+    case QUEEN:
+        break;
+    }
+    
+    return asbk;
 }

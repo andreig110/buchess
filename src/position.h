@@ -1,7 +1,6 @@
 #ifndef POSITION_H_INCLUDED
 #define POSITION_H_INCLUDED
 
-#include <algorithm>  // For std::find
 #include <cassert>
 #include <deque>
 #include <memory> // For std::unique_ptr
@@ -87,9 +86,8 @@ public:
     int rule50_count() const;
     
     unsigned char get_square_attackers_count(Color color, int file, int rank) const;
+    bool is_king_square_attacked(int file, int rank) const;
     void update();
-    void add_attacked_king_square(int file, int rank);
-    bool is_king_square_attacked(int file, int rank);
   
 private:
     // Initialization helpers (used while setting up a position)
@@ -98,6 +96,7 @@ private:
     void inc_square_attackers_count(Color color, int file, int rank);
     void update_squares_attackers_count();
     void print_squares_attackers_count();  // for debugging
+    void update_attacked_king_squares();
     
     // Other helpers
     void put_piece(Piece pc, /*Square s*/ int file, int rank);  // Optimization: do not create a temporary object 'Square'
@@ -117,7 +116,7 @@ private:
     Color sideToMove;
     StateInfo* st;
     unsigned char squares_attackers_count [COLOR_NB][8][8] = { { { 0 } } };  // calculated after UCI "go" command
-    VectorSquareList attacked_king_squares;
+    VectorSquareList attacked_king_squares;  // Attacked squares behind king (by bishop, rook or queen)
 };
 
 
@@ -202,12 +201,7 @@ inline unsigned char Position::get_square_attackers_count(Color color, int file,
     return squares_attackers_count[color][file][rank];
 }
 
-inline void Position::add_attacked_king_square(int file, int rank)
-{
-    attacked_king_squares.addSquare(Square(file, rank));
-}
-
-inline bool Position::is_king_square_attacked(int file, int rank)
+inline bool Position::is_king_square_attacked(int file, int rank) const
 {
     return attacked_king_squares.contains(Square(file, rank));
 }
