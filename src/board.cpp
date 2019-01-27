@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "board.h"
 #include "position.h"
 
@@ -149,26 +151,26 @@ SquareList king_attacks_from(int file, int rank)
 SquareList figure_attacks_from(const PieceType Pt, const Position& pos, int file, int rank)
 {
     switch (Pt) {
-        case PAWN:
-            return pawn_attacks_from(pos, file, rank);
-            break;
-        case KNIGHT:
-            return knight_attacks_from(file, rank);
-            break;
-        case BISHOP:
-            return bishop_attacks_from(pos, file, rank);
-            break;
-        case ROOK:
-            return rook_attacks_from(pos, file, rank);
-            break;
-        case QUEEN:
-            return queen_attacks_from(pos, file, rank);
-            break;
-        case KING:
-            return king_attacks_from(file, rank);
-            break;
-        default:
-            break;
+    case PAWN:
+        return pawn_attacks_from(pos, file, rank);
+        break;
+    case KNIGHT:
+        return knight_attacks_from(file, rank);
+        break;
+    case BISHOP:
+        return bishop_attacks_from(pos, file, rank);
+        break;
+    case ROOK:
+        return rook_attacks_from(pos, file, rank);
+        break;
+    case QUEEN:
+        return queen_attacks_from(pos, file, rank);
+        break;
+    case KING:
+        return king_attacks_from(file, rank);
+        break;
+    default:
+        break;
     }
 }
 
@@ -181,30 +183,81 @@ namespace {
         
         for (int to_rank = rank + 1; to_rank <= RANK_8; ++to_rank) {
             const Piece pc = pos.piece_on(file, to_rank);
-            if (pc == ourKing  &&  ++to_rank <= RANK_8)  // it does not check if the square (behind king) is occupied
+            if (pc == ourKing  &&  ++to_rank <= RANK_8) {  // it does not check if the square (behind king) is occupied
                 asbk->addSquare(Square(file, to_rank));
+                return;  // don't return, only break if you want to generate legal moves in a game with multiple kings :)
+            }
             if (pc != NO_PIECE)
                 break;
         }
         for (int to_rank = rank - 1; to_rank >= RANK_1; --to_rank) {
             const Piece pc = pos.piece_on(file, to_rank);
-            if (pc == ourKing  &&  --to_rank >= RANK_1)
+            if (pc == ourKing  &&  --to_rank >= RANK_1) {
                 asbk->addSquare(Square(file, to_rank));
+                return;
+            }
             if (pc != NO_PIECE)
                 break;
         }
         
         for (int to_file = file + 1; to_file <= FILE_H; ++to_file) {
             const Piece pc = pos.piece_on(to_file, rank);
-            if (pc == ourKing  &&  ++to_file <= FILE_H)
+            if (pc == ourKing  &&  ++to_file <= FILE_H) {
                 asbk->addSquare(Square(to_file, rank));
+                return;
+            }
             if (pc != NO_PIECE)
                 break;
         }
         for (int to_file = file - 1; to_file >= FILE_A; --to_file) {
             const Piece pc = pos.piece_on(to_file, rank);
-            if (pc == ourKing  &&  --to_file <= FILE_A)
+            if (pc == ourKing  &&  --to_file >= FILE_A) {
                 asbk->addSquare(Square(to_file, rank));
+                return;
+            }
+            if (pc != NO_PIECE)
+                break;
+        }
+    }
+    
+    void bishop_attacks_behind_king_from(const Position& pos, int file, int rank, VectorSquareList* asbk)
+    {
+        const Piece ourKing = make_piece(pos.side_to_move(), KING);
+        
+        for (int to_file = file + 1, to_rank = rank + 1; to_file <= FILE_H && to_rank <= RANK_8; ++to_file, ++to_rank) {
+            const Piece pc = pos.piece_on(to_file, to_rank);
+            if (pc == ourKing  &&  ++to_file <= FILE_H  &&  ++to_rank <= RANK_8) {  // it does not check if the square (behind king) is occupied
+                asbk->addSquare(Square(to_file, to_rank));
+                return;
+            }
+            if (pc != NO_PIECE)
+                break;
+        }
+        for (int to_file = file - 1, to_rank = rank - 1; to_file >= FILE_A && to_rank >= RANK_1; --to_file, --to_rank) {
+            const Piece pc = pos.piece_on(to_file, to_rank);
+            if (pc == ourKing  &&  --to_file >= FILE_A  &&  --to_rank >= RANK_1) {
+                asbk->addSquare(Square(to_file, to_rank));
+                return;
+            }
+            if (pc != NO_PIECE)
+                break;
+        }
+        
+        for (int to_file = file + 1, to_rank = rank - 1; to_file <= FILE_H && to_rank >= RANK_1; ++to_file, --to_rank) {
+            const Piece pc = pos.piece_on(to_file, to_rank);
+            if (pc == ourKing  &&  ++to_file <= FILE_H  &&  --to_rank >= RANK_1) {
+                asbk->addSquare(Square(to_file, to_rank));
+                return;
+            }
+            if (pc != NO_PIECE)
+                break;
+        }
+        for (int to_file = file - 1, to_rank = rank + 1; to_file >= FILE_A && to_rank <= RANK_8; --to_file, ++to_rank) {
+            const Piece pc = pos.piece_on(to_file, to_rank);
+            if (pc == ourKing  &&  --to_file >= FILE_A  &&  ++to_rank <= RANK_8) {
+                asbk->addSquare(Square(to_file, to_rank));
+                return;
+            }
             if (pc != NO_PIECE)
                 break;
         }
@@ -213,15 +266,21 @@ namespace {
 }  // namespace
 
 
+// Return attacked squares behind king (by bishop, rook or queen)
 VectorSquareList* figure_attacks_behind_king_from(const PieceType Pt, const Position& pos, int file, int rank, VectorSquareList* asbk)
 {
+    assert(Pt == BISHOP || Pt == ROOK || Pt == QUEEN);
+    
     switch (Pt) {
     case BISHOP:
+        bishop_attacks_behind_king_from(pos, file, rank, asbk);
         break;
     case ROOK:
         rook_attacks_behind_king_from(pos, file, rank, asbk);
         break;
     case QUEEN:
+        bishop_attacks_behind_king_from(pos, file, rank, asbk);
+        rook_attacks_behind_king_from(pos, file, rank, asbk);
         break;
     }
     

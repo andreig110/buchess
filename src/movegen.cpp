@@ -154,7 +154,8 @@ namespace {
     ExtMove* check_generate_king_move(const Position& pos, ExtMove* moveList, Color us,  int file, int rank, int to_file, int to_rank)
     {
         Piece pc = pos.piece_on(to_file, to_rank);
-        if (    ( pos.get_square_attackers_count(~us, to_file, to_rank) == 0 )    &&
+        if (    ( pos.get_square_attackers_count(~us, to_file, to_rank) == 0 )  &&
+                ( !pos.is_king_square_attacked(to_file, to_rank) )  &&
                 ( ( pc == NO_PIECE )  ||  ( color_of(pc) != color_of(pos.piece_on(file, rank)) ) )    )
             *moveList++ = Move( Square(file, rank), Square(to_file, to_rank) );
         return moveList;

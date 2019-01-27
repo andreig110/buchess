@@ -257,7 +257,8 @@ void Position::update_attacked_king_squares()
             const Piece pc = board[r][f];
             const PieceType pt = type_of(pc);
             if (pt == BISHOP || pt == ROOK || pt == QUEEN) {
-                figure_attacks_behind_king_from(pt, *this, f, r, &attacked_king_squares);
+                if (color_of(pc) != sideToMove)
+                    figure_attacks_behind_king_from(pt, *this, f, r, &attacked_king_squares);
             }
         }
 }
