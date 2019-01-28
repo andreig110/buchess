@@ -172,7 +172,7 @@ namespace {
         return moveList;
     }
     
-    template<Color Us/*, PieceType Pt, bool Checks*/>
+    template<Color Us, PieceType Pt/*, bool Checks*/>
     ExtMove* generate_moves(const Position& pos, ExtMove* moveList)
     {
         constexpr Piece ourKnight   = (Us == WHITE  ? W_KNIGHT  : B_KNIGHT);
@@ -184,19 +184,24 @@ namespace {
             for (int r = 0; r < 8; ++r) {
                 switch (pos.piece_on(f, r)) {
                 case ourKnight:
-                    moveList = generate_knight_moves(pos, moveList, Us, f, r);
+                    if (Pt == ALL_PIECES || Pt == KNIGHT)
+                        moveList = generate_knight_moves(pos, moveList, Us, f, r);
                     break;
                 case ourBishop:
-                    moveList = generate_bishop_moves(pos, moveList, Us, f, r);
+                    if (Pt == ALL_PIECES || Pt == BISHOP)
+                        moveList = generate_bishop_moves(pos, moveList, Us, f, r);
                     break;
                 case ourRook:
-                    moveList = generate_rook_moves(pos, moveList, Us, f, r);
+                    if (Pt == ALL_PIECES || Pt == ROOK)
+                        moveList = generate_rook_moves(pos, moveList, Us, f, r);
                     break;
                 case ourQueen:
-                    moveList = generate_queen_moves(pos, moveList, Us, f, r);
+                    if (Pt == ALL_PIECES || Pt == QUEEN)
+                        moveList = generate_queen_moves(pos, moveList, Us, f, r);
                     break;
                 case ourKing:
-                    moveList = generate_king_moves<Us>(pos, moveList, /*Us,*/ f, r);
+                    if (Pt == ALL_PIECES || Pt == KING)
+                        moveList = generate_king_moves<Us>(pos, moveList, /*Us,*/ f, r);
                     break;
                 default:
                     break;
@@ -212,7 +217,7 @@ namespace {
         //constexpr bool Checks = Type == QUIET_CHECKS;
         
         moveList = generate_pawn_moves<Us>(pos, moveList);
-        moveList = generate_moves<Us>(pos, moveList);
+        moveList = generate_moves<Us, ALL_PIECES>(pos, moveList);
         //moveList = generate_moves<KNIGHT, Checks>(pos, moveList, Us);
         //moveList = generate_moves<BISHOP, Checks>(pos, moveList, Us);
         //moveList = generate_moves<  ROOK, Checks>(pos, moveList, Us);
@@ -245,6 +250,15 @@ ExtMove* generate(const Position& pos, ExtMove* moveList)
     
     return us == WHITE  ? generate_all<WHITE, Type>(pos, moveList)
                         : generate_all<BLACK, Type>(pos, moveList);
+}
+
+template<>
+ExtMove* generate<EVASIONS>(const Position& pos, ExtMove* moveList)
+{
+    Color us = pos.side_to_move();
+    
+    return us == WHITE  ? generate_moves<WHITE, KING>(pos, moveList)
+                        : generate_moves<BLACK, KING>(pos, moveList);
 }
 
 
