@@ -73,7 +73,7 @@ public:
     bool in_check() const;  // new 2019-01-07
     
     // Properties of moves
-    bool gives_check(Move m) const;
+    bool gives_check(Move m) /*const*/;
     Piece captured_piece() const;
     
     // Doing moves
