@@ -267,12 +267,17 @@ ExtMove* generate<EVASIONS>(const Position& pos, ExtMove* moveList)
 template<>
 ExtMove* generate<LEGAL>(const Position& pos, ExtMove* moveList)
 {
-    Color us = pos.side_to_move();
+    //Color us = pos.side_to_move();
     
     ExtMove* cur = moveList;
     
     moveList = pos.in_check() ? generate<EVASIONS    >(pos, moveList)
                               : generate<NON_EVASIONS>(pos, moveList);
+    /*while (cur != moveList)
+        if (pos.gives_check(*cur))
+            *cur = (--moveList)->move;
+        else
+          ++cur;*/
     
     return moveList;
 }
