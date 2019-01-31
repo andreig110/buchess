@@ -147,7 +147,7 @@ void Position::print_position() const
     std::ostringstream ss;
     for (int row = RANK_8; row >= RANK_1; --row) {
         for (int col = FILE_A; col <= FILE_H; ++col) {
-            ss << board[row][col] << "\t";
+            ss << PieceToChar[ board[col][row] ] << "\t";
         }
         LOG::log(ss.str());
         ss.str("");
@@ -186,14 +186,14 @@ void Position::set_castling_right(Color c, Square_int rfrom)
 
 bool Position::gives_check(Move m) //const  // TODO
 {
-    Piece temp_piece = board[m.to.rank][m.to.file];
-    board[m.to.rank][m.to.file] = board[m.from.rank][m.from.file];
+    Piece temp_piece = board[m.to.file][m.to.rank];
+    board[m.to.file][m.to.rank] = board[m.from.file][m.from.rank];
     
     unsigned char tmp_squares_attackers_count [COLOR_NB][8][8];
     
     for (int f = 0; f < 8; ++f)
         for (int r = 0; r < 8; ++r) {
-            const Piece pc = board[r][f];
+            const Piece pc = board[f][r];
             if (pc != NO_PIECE) {
                 const SquareList list = figure_attacks_from(type_of(pc), *this, f, r);
                 for (const auto& sq : list)
@@ -204,8 +204,8 @@ bool Position::gives_check(Move m) //const  // TODO
     const Square_int king_sq = square<KING>(sideToMove);
     bool result = tmp_squares_attackers_count [~sideToMove] [file_of(king_sq)] [rank_of(king_sq)];
     
-    board[m.from.rank][m.from.file] = board[m.to.rank][m.to.file];
-    board[m.to.rank][m.to.file] = temp_piece;
+    board[m.from.file][m.from.rank] = board[m.to.file][m.to.rank];
+    board[m.to.file][m.to.rank] = temp_piece;
     return result;
 }
 
@@ -246,7 +246,7 @@ void Position::update_squares_attackers_count()
 {
     for (int f = 0; f < 8; ++f)
         for (int r = 0; r < 8; ++r) {
-            const Piece pc = board[r][f];
+            const Piece pc = board[f][r];
             if (pc != NO_PIECE) {
                 const SquareList list = figure_attacks_from(type_of(pc), *this, f, r);
                 for (const auto& sq : list)
@@ -274,7 +274,7 @@ void Position::update_attacked_king_squares()
 {
     for (int f = 0; f < 8; ++f)
         for (int r = 0; r < 8; ++r) {
-            const Piece pc = board[r][f];
+            const Piece pc = board[f][r];
             const PieceType pt = type_of(pc);
             if (pt == BISHOP || pt == ROOK || pt == QUEEN) {
                 if (color_of(pc) != sideToMove)

@@ -127,17 +127,17 @@ inline Color Position::side_to_move() const
 
 inline Piece Position::piece_on(Square s) const
 {
-    return board[s.rank][s.file];
+    return board[s.file][s.rank];
 }
 
 inline Piece Position::piece_on(int file, int rank) const
 {
-    return board[rank][file];
+    return board[file][rank];
 }
 
 inline Piece Position::piece_on(Square_int s) const
 {
-    return board [rank_of(s)] [file_of(s)];
+    return board [file_of(s)] [rank_of(s)];
 }
 
 inline Bitboard Position::pieces() const
@@ -243,7 +243,7 @@ inline Piece Position::captured_piece() const
 
 inline void Position::put_piece(Piece pc, /*Square s*/ int file, int rank)
 {
-    board[rank][file] = pc;
+    board[file][rank] = pc;
     const Square_int s = make_square(static_cast<File>(file), static_cast<Rank>(rank));
     byTypeBB[ALL_PIECES] |= s;
     byTypeBB[type_of(pc)] |= s;
@@ -255,9 +255,9 @@ inline void Position::put_piece(Piece pc, /*Square s*/ int file, int rank)
 
 inline void Position::move_piece(/*Piece pc,*/ Square from, Square to)
 {
-    const Piece pc = board[from.rank][from.file];
-    board[to.rank][to.file] = pc;
-    board[from.rank][from.file] = NO_PIECE;
+    const Piece pc = board[from.file][from.rank];
+    board[to.file][to.rank] = pc;
+    board[from.file][from.rank] = NO_PIECE;
     
     // index[from] is not updated and becomes stale. This works as long as index[]
     // is accessed just by known occupied squares.
