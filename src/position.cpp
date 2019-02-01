@@ -184,29 +184,9 @@ void Position::set_castling_right(Color c, Square_int rfrom)
 
 /// Position::gives_check() tests whether a pseudo-legal move gives a check
 
-bool Position::gives_check(Move m) //const  // TODO
+bool Position::gives_check(Move m) const  // TODO
 {
-    Piece temp_piece = board[m.to.file][m.to.rank];
-    board[m.to.file][m.to.rank] = board[m.from.file][m.from.rank];
-    
-    unsigned char tmp_squares_attackers_count [COLOR_NB][8][8];
-    
-    for (int f = 0; f < 8; ++f)
-        for (int r = 0; r < 8; ++r) {
-            const Piece pc = board[f][r];
-            if (pc != NO_PIECE) {
-                const SquareList list = figure_attacks_from(type_of(pc), *this, f, r);
-                for (const auto& sq : list)
-                    ++tmp_squares_attackers_count[color_of(pc)][sq.file][sq.rank];
-            }
-        }
-    
-    const Square_int king_sq = square<KING>(sideToMove);
-    bool result = tmp_squares_attackers_count [~sideToMove] [file_of(king_sq)] [rank_of(king_sq)];
-    
-    board[m.from.file][m.from.rank] = board[m.to.file][m.to.rank];
-    board[m.to.file][m.to.rank] = temp_piece;
-    return result;
+    return 0;
 }
 
 
