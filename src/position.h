@@ -24,12 +24,12 @@ struct StateInfo {
     
     // Not copied when making a move (will be recomputed anyhow)
     Key        key;  // TODO
-    //Bitboard   checkersBB;
+    VectorSquareList checkers;
     Piece      capturedPiece;
     StateInfo* previous;
-    Bitboard   blockersForKing[COLOR_NB];
-    Bitboard   pinners[COLOR_NB];
-    Bitboard   checkSquares[PIECE_TYPE_NB];
+    VectorSquareList blockersForKing[COLOR_NB];
+    //VectorSquareList pinners[COLOR_NB];
+    VectorSquareList checkSquares[PIECE_TYPE_NB];
 };
 
 /// A list to keep track of the position states along the setup moves (from the
@@ -67,12 +67,16 @@ public:
     Square_int castling_rook_square(CastlingRight cr) const;
     
     // Checking
-    //Bitboard checkers() const;
-    Bitboard blockers_for_king(Color c) const;
-    Bitboard check_squares(PieceType pt) const;
+    VectorSquareList checkers() const;
+    VectorSquareList blockers_for_king(Color c) const;
+    VectorSquareList check_squares(PieceType pt) const;
     bool in_check() const;  // new 2019-01-07
     
+    // Attacks to/from a given square
+    VectorSquareList slider_blockers(Square from, Square to) const;
+    
     // Properties of moves
+    bool legal(Move m) const;
     bool gives_check(Move m) const;
     Piece captured_piece() const;
     
@@ -92,6 +96,8 @@ public:
 private:
     // Initialization helpers (used while setting up a position)
     void set_castling_right(Color c, Square_int rfrom);
+    void set_check_info(StateInfo* si) const;
+    void set_state(StateInfo* si) const;
     
     void inc_square_attackers_count(Color color, int file, int rank);
     void update_squares_attackers_count();
@@ -206,16 +212,16 @@ inline bool Position::is_king_square_attacked(int file, int rank) const
     return attacked_king_squares.contains(Square(file, rank));
 }
 
-/*inline Bitboard Position::checkers() const {
-    return st->checkersBB;
-}*/
+inline VectorSquareList Position::checkers() const {
+    return st->checkers;
+}
 
-inline Bitboard Position::blockers_for_king(Color c) const
+inline VectorSquareList Position::blockers_for_king(Color c) const
 {
     return st->blockersForKing[c];
 }
 
-inline Bitboard Position::check_squares(PieceType pt) const
+inline VectorSquareList Position::check_squares(PieceType pt) const
 {
     return st->checkSquares[pt];
 }

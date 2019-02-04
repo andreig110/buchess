@@ -79,9 +79,10 @@ enum Rank : int {
 };
 
 struct Square {
-    Square() { file = FILE_A; rank = RANK_1; };
-    Square(File f, Rank r) { file = f; rank = r; };
-    Square(int f, int r) { file = static_cast<File>(f); rank = static_cast<Rank>(r); };
+    Square() { file = FILE_A; rank = RANK_1; }
+    Square(File f, Rank r) { file = f; rank = r; }
+    Square(int f, int r) { file = static_cast<File>(f); rank = static_cast<Rank>(r); }
+    Square(Square_int sqi) { file = File(sqi & 7); rank = Rank(sqi >> 3); }
     operator Square_int() const { return Square_int((rank << 3) + file); }    // same as make_square()
     File file;
     Rank rank;
@@ -89,8 +90,8 @@ struct Square {
 
 struct Move {
     Move() = default;
-    Move(Square f, Square t)  { from = f; to = t; };
-    Move(Square f, Square t, PieceType prom)  { from = f; to = t; pawnPromotion = prom; };
+    Move(Square f, Square t)  { from = f; to = t; }
+    Move(Square f, Square t, PieceType prom)  { from = f; to = t; pawnPromotion = prom; }
     Square from;
     Square to;
     PieceType pawnPromotion = NO_PIECE_TYPE;
@@ -111,16 +112,20 @@ private:
 };
 
 struct VectorSquareList {
+    VectorSquareList() = default;
+    VectorSquareList(Square sq) { squareList.push_back(sq); }
     void addSquare(Square sq)
     {
         if (std::find(squareList.cbegin(), squareList.cend(), sq) == squareList.cend())  // Push only unique values
             squareList.push_back(sq);
     }
-    void clear() { squareList.clear(); }
     bool contains(Square sq) const
     {
         return std::find(squareList.cbegin(), squareList.cend(), sq) != squareList.cend();
     }
+    Square front() const { return squareList.front(); }
+    size_t size() const { return squareList.size(); }
+    void clear() { squareList.clear(); }
 private:
     std::vector<Square> squareList;
 };

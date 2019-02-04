@@ -134,7 +134,7 @@ Position& Position::set(const string& fenStr, StateInfo* si)
     // handle also common incorrect FEN with fullmove = 0.
     gamePly = std::max(2 * (gamePly - 1), 0) + (sideToMove == BLACK);
     
-    //set_state(st);  TODO
+    set_state(st);
     
     //assert(pos_is_ok());  TODO
     
@@ -182,6 +182,89 @@ void Position::set_castling_right(Color c, Square_int rfrom)
 }
 
 
+/// Position::set_check_info() sets king attacks to detect if a move gives check
+
+void Position::set_check_info(StateInfo* si) const
+{
+    for (int file = FILE_A; file <= FILE_H; ++file)
+        for (int rank = RANK_1; rank <= RANK_8; ++rank) {
+            Piece pc = piece_on(file, rank);
+            PieceType pt = type_of(pc);
+            
+            if (pt == BISHOP || pt == ROOK || pt == QUEEN) {
+                Color c = color_of(pc);
+                VectorSquareList sqList = slider_blockers(Square(file, rank), square<KING>(~c));
+                if (sqList.size() == 1)
+                    si->blockersForKing[~c].addSquare( sqList.front() );
+            }
+        }
+}
+
+
+void Position::set_state(StateInfo* si) const
+{
+    set_check_info(si);
+}
+
+
+VectorSquareList Position::slider_blockers(Square from, Square to) const
+{
+    Piece pc = piece_on(from);
+    PieceType pt = type_of(pc);
+    assert(pt == BISHOP || pt == ROOK || pt == QUEEN);
+    assert(from != to);
+    
+    VectorSquareList blockersList;
+    
+    if ((from.file == to.file) && (pt == ROOK || pt == QUEEN)) {
+        //assert(abs(to.rank - from.rank) > 1);
+        for (int r = std::min(from.rank, to.rank) + 1; r < std::max(from.rank, to.rank); ++r) {
+            if (piece_on(from.file, r) != NO_PIECE)
+                blockersList.addSquare(Square(from.file, r));
+        }
+        return blockersList;
+    }
+    else if ((from.rank == to.rank) && (pt == ROOK || pt == QUEEN)) {
+        //assert(abs(to.file - from.file) > 1);
+        for (int f = std::min(from.file, to.file) + 1; f < std::max(from.file, to.file); ++f) {
+            if (piece_on(f, from.rank) != NO_PIECE)
+                blockersList.addSquare(Square(f, from.rank));
+        }
+        return blockersList;
+    }
+    else if ((abs(to.file - from.file) == abs(to.rank - from.rank))  &&  (pt == BISHOP || pt == QUEEN)) {
+        //assert(abs(to.file - from.file) > 1);
+        /*for (   int f = std::min(from.file, to.file) + 1, r = std::min(from.rank, to.rank) + 1;
+                    f < std::max(from.file, to.file)  &&  r < std::max(from.rank, to.rank);
+                ++f, ++r    ) {*/       // Unfortunately, this doesn't work like that :)
+        const int df = (from.file < to.file) ? +1 : -1;
+        const int dr = (from.rank < to.rank) ? +1 : -1;
+        for (   int f = from.file + df, r = from.rank + dr;
+                f != to.file && r != to.rank;
+                f += df, r += dr    ) {
+            if (piece_on(f, r) != NO_PIECE)
+                blockersList.addSquare(Square(f, r));
+        }
+        //return blockersList;
+    }
+    
+    return blockersList;
+}
+
+
+/// Position::legal() tests whether a pseudo-legal move is legal
+
+bool Position::legal(Move m) const
+{
+    Color us = sideToMove;
+    
+    // A non-king move is legal if and only if it is not pinned or it
+    // is moving along the ray towards or away from the king.
+    return !blockers_for_king(us).contains(m.from)
+        || aligned(m.from, m.to, square<KING>(us));
+}
+
+
 /// Position::gives_check() tests whether a pseudo-legal move gives a check
 
 bool Position::gives_check(Move m) const  // TODO
@@ -224,13 +307,17 @@ void Position::update()
 
 void Position::update_squares_attackers_count()
 {
+    Square ksq = square<KING>(sideToMove);
     for (int f = 0; f < 8; ++f)
         for (int r = 0; r < 8; ++r) {
             const Piece pc = board[f][r];
             if (pc != NO_PIECE) {
                 const SquareList list = figure_attacks_from(type_of(pc), *this, f, r);
-                for (const auto& sq : list)
+                for (const auto& sq : list) {
                     ++squares_attackers_count[color_of(pc)][sq.file][sq.rank];
+                    if ((color_of(pc) != sideToMove) && (sq == ksq))
+                        st->checkers.addSquare(Square(f, r));
+                }
             }
         }
 }

@@ -167,8 +167,10 @@ namespace {
         for ( const Square& sq : king_attacks_from(f, r) ) {
             moveList = check_generate_king_move(pos, moveList, Us, f, r, sq.file, sq.rank);
         }
-        moveList = generate_castling< make_castling<Us, KING_SIDE>() >(pos, moveList, Us);
-        moveList = generate_castling< make_castling<Us, QUEEN_SIDE>() >(pos, moveList, Us);
+        if (!pos.in_check() && pos.can_castle(Us)) {
+            moveList = generate_castling< make_castling<Us, KING_SIDE>() >(pos, moveList, Us);
+            moveList = generate_castling< make_castling<Us, QUEEN_SIDE>() >(pos, moveList, Us);
+        }
         return moveList;
     }
     
@@ -257,8 +259,25 @@ ExtMove* generate<EVASIONS>(const Position& pos, ExtMove* moveList)
 {
     Color us = pos.side_to_move();
     
-    return us == WHITE  ? generate_moves<WHITE, KING>(pos, moveList)
-                        : generate_moves<BLACK, KING>(pos, moveList);
+    ExtMove* cur = moveList;
+    
+    moveList = us == WHITE  ? generate_all<WHITE, EVASIONS>(pos, moveList)
+                            : generate_all<BLACK, EVASIONS>(pos, moveList);
+    
+    Square ksq = pos.square<KING>(us);
+    VectorSquareList target_sqlist;
+    if (pos.checkers().size() == 1)
+        target_sqlist = between(ksq, pos.checkers().front());
+    target_sqlist.addSquare(pos.checkers().front());
+    
+    while (cur != moveList) {
+        if ((cur->move.from == ksq) || target_sqlist.contains(cur->move.to))
+            ++cur;
+        else
+            *cur = (--moveList)->move;
+    }
+    
+    return moveList;
 }
 
 
@@ -273,11 +292,11 @@ ExtMove* generate<LEGAL>(const Position& pos, ExtMove* moveList)
     
     moveList = pos.in_check() ? generate<EVASIONS    >(pos, moveList)
                               : generate<NON_EVASIONS>(pos, moveList);
-    /*while (cur != moveList)
-        if (pos.gives_check(*cur))
+    while (cur != moveList)
+        if (!pos.legal(*cur))
             *cur = (--moveList)->move;
         else
-          ++cur;*/
+            ++cur;
     
     return moveList;
 }

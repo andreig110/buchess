@@ -286,3 +286,47 @@ VectorSquareList* figure_attacks_behind_king_from(const PieceType Pt, const Posi
     
     return asbk;
 }
+
+
+/// between() returns a list representing all the squares between the two
+/// given ones.
+
+VectorSquareList between(const Square& s1, const Square& s2)
+{
+    VectorSquareList res;
+    if (s1.file == s2.file)
+        for (int r = std::min(s1.rank, s2.rank) + 1; r < std::max(s1.rank, s2.rank); ++r)
+            res.addSquare(Square(s1.file, r));
+    else if (s1.rank == s2.rank)
+        for (int f = std::min(s1.file, s2.file) + 1; f < std::max(s1.file, s2.file); ++f)
+            res.addSquare(Square(f, s1.rank));
+    else if (abs(s2.file - s1.file) == abs(s2.rank - s1.rank)) {
+        const int df = (s1.file < s2.file) ? +1 : -1;
+        const int dr = (s1.rank < s2.rank) ? +1 : -1;
+        for (   int f = s1.file + df, r = s1.rank + dr;
+                f != s2.file && r != s2.rank;
+                f += df, r += dr    ) 
+            res.addSquare(Square(f, r));
+    }
+    return res;
+}
+
+
+/// aligned() returns true if the squares s1, s2 and s3 are aligned either on a
+/// straight or on a diagonal line.
+
+bool aligned(const Square& s1, const Square& s2, const Square& s3)
+{
+    if (    ((s1.file == s2.file) && (s1.file == s3.file))
+         || ((s1.rank == s2.rank) && (s1.rank == s3.rank))  )
+        return true;
+    else {
+        bool res =  ((s2.file - s1.file) == (s2.rank - s1.rank))
+                 && ((s3.file - s1.file) == (s3.rank - s1.rank));
+        if (!res)
+            res  =  ((s2.file - s1.file) == -(s2.rank - s1.rank))
+                 && ((s3.file - s1.file) == -(s3.rank - s1.rank));
+
+        return res;
+    }
+}
