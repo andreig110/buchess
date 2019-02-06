@@ -322,13 +322,13 @@ bool aligned(const Square& s1, const Square& s2, const Square& s3)
     const int df31 = s3.file - s1.file;
     const int dr31 = s3.rank - s1.rank;
     
+    //if ((!df21 && !df31) || (!dr21 && !dr31))
     if (!(df21 || df31) || !(dr21 || dr31))
         return true;
     else {
         bool res =  (df21 ==  dr21) && (df31 ==  dr31);
         if (!res)
             res  =  (df21 == -dr21) && (df31 == -dr31);
-
         return res;
     }
 }

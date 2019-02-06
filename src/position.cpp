@@ -258,6 +258,11 @@ bool Position::legal(Move m) const
 {
     Color us = sideToMove;
     
+    // En passant captures
+    if (m.to == st->epSquare) {
+        // TODO
+    }
+    
     // A non-king move is legal if and only if it is not pinned or it
     // is moving along the ray towards or away from the king.
     return !blockers_for_king(us).contains(m.from)
