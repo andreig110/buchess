@@ -299,7 +299,20 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     ++st->rule50;
     ++st->pliesFromNull;
     
+    Color us = sideToMove;
+    Piece pc = piece_on(m.from);
+    
     move_piece(m.from, m.to);  // TODO: consider different types of moves
+    
+    // If the moving piece is a pawn do some special extra work
+    if (type_of(pc) == PAWN) {  // TODO: Set en-passant square
+        if (m.pawnPromotion) {  // if (m.pawnPromotion != NO_PIECE_TYPE), NO_PIECE_TYPE = 0
+            Piece promotion = make_piece(us, m.pawnPromotion);
+            
+            remove_piece(pc, m.to);
+            put_piece(promotion, m.to.file, m.to.rank);
+        }
+    }
     
     sideToMove = ~sideToMove;
 }

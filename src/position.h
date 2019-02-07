@@ -106,6 +106,7 @@ private:
     
     // Other helpers
     void put_piece(Piece pc, /*Square s*/ int file, int rank);  // Optimization: do not create a temporary object 'Square'
+    void remove_piece(Piece pc, Square_int s);
     void move_piece(/*Piece pc,*/ Square from, Square to);
     
     // Data members
@@ -257,6 +258,19 @@ inline void Position::put_piece(Piece pc, /*Square s*/ int file, int rank)
     index[s] = pieceCount[pc]++;
     pieceList[pc][index[s]] = s;
     //pieceCount[make_piece(color_of(pc), ALL_PIECES)]++;
+}
+
+inline void Position::remove_piece(Piece pc, Square_int s)
+{
+    byTypeBB[ALL_PIECES] ^= s;
+    byTypeBB[type_of(pc)] ^= s;
+    byColorBB[color_of(pc)] ^= s;
+    
+    Square lastSquare = pieceList[pc][--pieceCount[pc]];
+    index[lastSquare] = index[s];
+    pieceList[pc][index[lastSquare]] = lastSquare;
+    pieceList[pc][pieceCount[pc]] = SQ_NONE;
+    //pieceCount[make_piece(color_of(pc), ALL_PIECES)]--;
 }
 
 inline void Position::move_piece(/*Piece pc,*/ Square from, Square to)

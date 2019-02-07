@@ -157,11 +157,16 @@ string UCI::move(Move m/*, bool chess960*/)
 
 Move UCI::to_move(const Position& pos, string& str)
 {
-    if (str.length() == 5) // Junior could send promotion piece in uppercase
-        str[4] = char(tolower(str[4]));
-    
     Move m;
     m.from = from_sq(str);
     m.to = to_sq(str);
+    
+    if (str.length() == 5) {  // Junior could send promotion piece in uppercase
+        str[4] = char(tolower(str[4]));
+        const string CharToPromotion ("  nbrq");
+        const size_t idx = CharToPromotion.find(str[4]);
+        m.pawnPromotion = static_cast<PieceType>(idx);  // TODO: if idx < 2(KNIGHT) || idx > 5(QUEEN)
+    }
+    
     return m;
 }
