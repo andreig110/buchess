@@ -195,4 +195,8 @@ constexpr Rank relative_rank(Color c, Rank r) {
     return Rank(r ^ (c * 7));
 }
 
+constexpr Direction pawn_push(Color c) {
+    return c == WHITE ? NORTH : SOUTH;
+}
+
 #endif // #ifndef TYPES_H_INCLUDED

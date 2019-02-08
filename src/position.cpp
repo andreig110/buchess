@@ -302,11 +302,18 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     Color us = sideToMove;
     Piece pc = piece_on(m.from);
     
-    move_piece(m.from, m.to);  // TODO: consider different types of moves
+    // Reset en passant square
+    //if (st->epSquare != SQ_NONE)
+        st->epSquare = SQ_NONE;
+    
+    move_piece(m.from, m.to);  // TODO: Handle castling
     
     // If the moving piece is a pawn do some special extra work
-    if (type_of(pc) == PAWN) {  // TODO: Set en-passant square
-        if (m.pawnPromotion) {  // if (m.pawnPromotion != NO_PIECE_TYPE), NO_PIECE_TYPE = 0
+    if (type_of(pc) == PAWN) {
+        // Set en-passant square
+        if ( (int(m.to) ^ int(m.from)) == 16 )
+            st->epSquare = m.to - pawn_push(us);
+        else if (m.pawnPromotion) {  // if (m.pawnPromotion != NO_PIECE_TYPE), NO_PIECE_TYPE = 0
             Piece promotion = make_piece(us, m.pawnPromotion);
             
             remove_piece(pc, m.to);
@@ -315,6 +322,9 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     }
     
     sideToMove = ~sideToMove;
+    
+    // Update king attacks used for fast check detection
+    set_check_info(st);
 }
 
 void Position::update()
