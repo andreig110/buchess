@@ -300,7 +300,27 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     ++st->pliesFromNull;
     
     Color us = sideToMove;
+    Color them = ~us;
     Piece pc = piece_on(m.from);
+    bool m_en_passant = m.to == st->epSquare;
+    Piece captured = m_en_passant ? make_piece(them, PAWN) : piece_on(m.to);
+    
+    if (captured) {
+        Square capsq = m.to;
+        
+        if (type_of(captured) == PAWN) {
+            if (m_en_passant) {
+                capsq = capsq - pawn_push(us);
+                board[capsq.file][capsq.rank] = NO_PIECE; // Not done by remove_piece()
+            }
+        }
+        
+        // Update board and piece lists
+        remove_piece(captured, capsq);
+        
+        // Reset rule 50 counter
+        st->rule50 = 0;
+    }
     
     // Reset en passant square
     //if (st->epSquare != SQ_NONE)
