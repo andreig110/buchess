@@ -302,7 +302,7 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     Color us = sideToMove;
     Color them = ~us;
     Piece pc = piece_on(m.from);
-    bool m_en_passant = m.to == st->epSquare;
+    bool m_en_passant = m.to == st->epSquare;  // type_of(m.flags) == ENPASSANT
     Piece captured = m_en_passant ? make_piece(them, PAWN) : piece_on(m.to);
     
     if (captured) {
@@ -333,8 +333,8 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
         // Set en-passant square
         if ( (int(m.to) ^ int(m.from)) == 16 )
             st->epSquare = m.to - pawn_push(us);
-        else if (m.pawnPromotion) {  // if (m.pawnPromotion != NO_PIECE_TYPE), NO_PIECE_TYPE = 0
-            Piece promotion = make_piece(us, m.pawnPromotion);
+        else if (type_of(m.flags) == PROMOTION) {
+            Piece promotion = make_piece(us, promotion_type(m.flags));
             
             remove_piece(pc, m.to);
             put_piece(promotion, m.to.file, m.to.rank);
