@@ -143,7 +143,18 @@ std::string UCI::square(Square s)
 
 string UCI::move(Move m/*, bool chess960*/)
 {
-    string move = UCI::square(m.from) + UCI::square(m.to);
+    Square to = m.to;
+    
+    if (type_of(m.flags) == MOVE_NONE)
+        return "(none)";
+    
+    if (type_of(m.flags) == MOVE_NULL)
+        return "0000";
+    
+    if (type_of(m.flags) == CASTLING /*&& !chess960*/)
+        to = make_square(to > m.from ? FILE_G : FILE_C, rank_of(m.from));
+    
+    string move = UCI::square(m.from) + UCI::square(to);
     
     if (type_of(m.flags) == PROMOTION)
         move += " pnbrqk"[promotion_type(m.flags)];
@@ -153,16 +164,16 @@ string UCI::move(Move m/*, bool chess960*/)
 
 
 /// UCI::to_move() converts a string representing a move in coordinate notation
-/// (g1f3, a7a8q) to the corresponding (legal) Move, (if any).
+/// (g1f3, a7a8q) to the corresponding legal Move, if any.
 
 Move UCI::to_move(const Position& pos, string& str)
 {
-    if (str.length() == 5) {  // Junior could send promotion piece in uppercase
+    if (str.length() == 5) // Junior could send promotion piece in uppercase
         str[4] = char(tolower(str[4]));
-        const string CharToPromotion ("  nbrq");
-        const size_t idx = CharToPromotion.find(str[4]);
-        return Move(from_sq(str), to_sq(str), static_cast<PieceType>(idx));  // TODO: if idx < 2(KNIGHT) || idx > 5(QUEEN)
-    }
-    
-    return Move(from_sq(str), to_sq(str));
+
+    for (const auto& m : MoveList<LEGAL>(pos))
+        if (str == UCI::move(m/*, pos.is_chess960()*/))
+            return m;
+
+    return Move(SQ_NONE, SQ_NONE, MOVE_NONE);
 }

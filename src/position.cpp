@@ -305,6 +305,11 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     bool m_en_passant = m.to == st->epSquare;  // type_of(m.flags) == ENPASSANT
     Piece captured = m_en_passant ? make_piece(them, PAWN) : piece_on(m.to);
     
+    if (type_of(m.flags) == CASTLING) {
+        do_castling<true>(us, m.from, m.to);
+        captured = NO_PIECE;
+    }
+    
     if (captured) {
         Square capsq = m.to;
         
@@ -326,7 +331,15 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
     //if (st->epSquare != SQ_NONE)
         st->epSquare = SQ_NONE;
     
-    move_piece(m.from, m.to);  // TODO: Handle castling
+    // Update castling rights if needed
+    if (st->castlingRights && (castlingRightsMask[m.from] | castlingRightsMask[m.to])) {
+        int cr = castlingRightsMask[m.from] | castlingRightsMask[m.to];
+        st->castlingRights &= ~cr;
+    }
+    
+    // Move the piece. The tricky Chess960 castling is handled earlier
+    if (type_of(m.flags) != CASTLING)
+        move_piece(m.from, m.to);
     
     // If the moving piece is a pawn do some special extra work
     if (type_of(pc) == PAWN) {
@@ -335,16 +348,41 @@ void Position::do_move(Move m, StateInfo& newSt, bool givesCheck)
             st->epSquare = m.to - pawn_push(us);
         else if (type_of(m.flags) == PROMOTION) {
             Piece promotion = make_piece(us, promotion_type(m.flags));
-            
             remove_piece(pc, m.to);
             put_piece(promotion, m.to.file, m.to.rank);
         }
+        
+        // Reset rule 50 draw counter
+        st->rule50 = 0;
     }
+    
+    // Set capture piece
+    st->capturedPiece = captured;
     
     sideToMove = ~sideToMove;
     
     // Update king attacks used for fast check detection
     set_check_info(st);
+}
+
+
+/// Position::do_castling() is a helper used to do/undo a castling move. This
+/// is a bit tricky in Chess960 where from/to squares can overlap.
+template<bool Do>
+void Position::do_castling(Color us, Square from, Square& to/*, Square& rfrom, Square& rto*/)
+{
+    bool kingSide = to > from;
+    Square rfrom = to; // Castling is encoded as "king captures friendly rook"
+    Square rto = relative_square(us, kingSide ? SQ_F1 : SQ_D1);
+    to = relative_square(us, kingSide ? SQ_G1 : SQ_C1);
+
+    // Remove both pieces first since squares could overlap in Chess960
+    remove_piece(make_piece(us, KING), Do ? from : to);
+    remove_piece(make_piece(us, ROOK), Do ? rfrom : rto);
+    board[Do ? from.file : to.file][Do ? from.rank : to.rank] =
+        board[Do ? rfrom.file : rto.file][Do ? rfrom.rank : rto.rank] = NO_PIECE; // Since remove_piece doesn't do it for us
+    put_piece(make_piece(us, KING), Do ? to : from);
+    put_piece(make_piece(us, ROOK), Do ? rto : rfrom);
 }
 
 void Position::update()

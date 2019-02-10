@@ -105,9 +105,12 @@ private:
     void update_attacked_king_squares();
     
     // Other helpers
-    void put_piece(Piece pc, /*Square s*/ int file, int rank);  // Optimization: do not create a temporary object 'Square'
+    void put_piece(Piece pc, Square s);
+    void put_piece(Piece pc, int file, int rank);
     void remove_piece(Piece pc, Square_int s);
     void move_piece(/*Piece pc,*/ Square from, Square to);
+    template<bool Do>
+    void do_castling(Color us, Square from, Square& to/*, Square& rfrom, Square& rto*/);
     
     // Data members
     Piece board [8][8] = { { NO_PIECE } };
@@ -248,7 +251,12 @@ inline Piece Position::captured_piece() const
     return st->capturedPiece;
 }
 
-inline void Position::put_piece(Piece pc, /*Square s*/ int file, int rank)
+inline void Position::put_piece(Piece pc, Square s)
+{
+    put_piece(pc, s.file, s.rank);
+}
+
+inline void Position::put_piece(Piece pc, int file, int rank)
 {
     board[file][rank] = pc;
     const Square_int s = make_square(static_cast<File>(file), static_cast<Rank>(rank));

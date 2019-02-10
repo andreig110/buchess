@@ -28,10 +28,8 @@ namespace {
             if (pos.get_square_attackers_count(~us, file_of(s), rank_of(s)))  // new 2019-01-06
                 return moveList;
         
-        //Move m = make<CASTLING>(kfrom, rfrom);
-        /* TODO: decide how to encode castling:
-         * "kfrom -> kto"  or  "kfrom -> rfrom" (king captures rook) ? */
-        Move m ( Square(file_of(kfrom), rank_of(kfrom)), Square(file_of(kto), rank_of(kto)) );
+        // Castling is encoded as "king captures friendly rook"
+        Move m (kfrom, rfrom, CASTLING);
         
         *moveList++ = m;
         return moveList;

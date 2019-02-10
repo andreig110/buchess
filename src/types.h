@@ -88,22 +88,28 @@ struct Square {
     Rank rank;
 };
 
-struct Move {
-    Move() = default;
-    Move(Square f, Square t)  { from = f; to = t; flags = 0; }
-    Move(Square f, Square t, PieceType prom)  { from = f; to = t; flags = /*PROMOTION*/4 + prom - KNIGHT; }
-    Square from;
-    Square to;
-    /// bit 0-1: promotion piece type - 2 (from KNIGHT-2 to QUEEN-2)
-    /// bit 2-3: special move flag: promotion (1), en passant (2), castling (3)
-    unsigned char flags;
-};
-
 enum MoveType {
     NORMAL,
     PROMOTION = 1 << 2,
     ENPASSANT = 2 << 2,
-    CASTLING  = 3 << 2
+    CASTLING  = 3 << 2,
+    
+    MOVE_NONE = 1 << 4,
+    MOVE_NULL = 1 << 5
+};
+
+struct Move {
+    Move() = default;
+    Move(Square f, Square t)  { from = f; to = t; flags = 0; }
+    Move(Square f, Square t, MoveType flags_)  { from = f; to = t; flags = flags_; }
+    Move(Square f, Square t, PieceType prom)  { from = f; to = t; flags = PROMOTION + prom - KNIGHT; }
+    Square from;
+    Square to;
+    /// bit 0-1: promotion piece type - 2 (from KNIGHT-2 to QUEEN-2)
+    /// bit 2-3: special move flag: promotion (1), en passant (2), castling (3)
+    /// bit 4: MOVE_NONE
+    /// bit 5: MOVE_NULL
+    unsigned char flags;
 };
 
 struct SquareList {
@@ -209,7 +215,7 @@ constexpr Direction pawn_push(Color c) {
 }
 
 constexpr MoveType type_of(/*Move m*/ unsigned char move_flags) {
-    return MoveType(move_flags & (3 << 2));
+    return MoveType(move_flags & (15 << 2));
 }
 
 constexpr PieceType promotion_type(/*Move m*/ unsigned char move_flags) {
